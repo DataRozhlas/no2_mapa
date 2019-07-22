@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js"></script>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="./data.js"></script>
+
+<style>
+    #no_mapa {
+        width: 100%;
+        height: 60vh;
+    }
+</style>
+
+<div id="no_mapa"></div>
+
+<script>
+    var map = L.map('no_mapa').setView([49.7417, 15.3350], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; přispěvatelé <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, data <a href="https://www.duh.de/no2airpollution/">Environmental Action Germany</a>'
+    }).addTo(map);
+
+    data = data.filter(d => d.seriesName == 'Messungen Tschechien');
+    data.sort((a, b) => a.measurement - b.measurement);
+
+    var vals = [];
+    data.forEach(e => vals.push(e.measurement));
+    var colScale = d3.scaleLog().base(Math.E).domain([Math.min(...vals), Math.max(...vals)]).range([0, 1]);
+
+    data.forEach(e => L.circleMarker([e.latitude, e.longitude], {
+        fillColor: d3.interpolateReds(colScale(e.measurement)),
+        fillOpacity: 0.8,
+        color: 'lightgray',
+        weight: 1,
+        radius: 8,
+    }).addTo(map).bindPopup(
+        e.city + '<br>'
+        + 'měření ' + e.period + '<br>'
+        + e.measurement + ' ug/mg NO2'
+    ));
+</script>
